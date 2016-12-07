@@ -22,7 +22,7 @@ let walk (d : int * int) (p : (int * int) list) : (int * int) list =
     match p with
         | [] -> [d]
         | x::xs ->  let d' = (fst d + fst x, snd d + snd x);
-                    [d'] @ p;
+                    d' :: p;
 
 let rec compile (d : int * int) (l : int) (p : (int * int) list) : (int * int) list =
     match l with
@@ -43,7 +43,7 @@ let rec revisit (p : (int * int) list) (r : (int * int) list) : int * int =
         | [], x::xs -> revisit [x] xs
         | _, (x1, x2)::xs ->    match Seq.tryFindIndex (fun (y1, y2) -> x1 = y1 && x2 = y2) p with
                                     | Some i -> (x1, x2);
-                                    | None -> revisit ([(x1, x2)] @ p) xs;
+                                    | None -> revisit ((x1, x2) :: p) xs;
 
 let distance (a : int * int) : int =
     let (x, y) = a;

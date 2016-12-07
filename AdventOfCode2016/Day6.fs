@@ -12,9 +12,9 @@ let rec accumulate (s : (char * int) list) (c : char) : (char * int) list =
     match s with
         | [] -> [(c, 1)];
         | (x, y)::xs -> if x = c then
-                            [(x, y+1)] @ xs;
+                            (x, y+1) :: xs;
                         else
-                            [(x, y)] @ accumulate xs c;
+                            (x, y) :: accumulate xs c;
 
 let rec accrete (s : (char * int) list) (c : char list) : (char * int) list =
     match c with

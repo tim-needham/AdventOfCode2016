@@ -28,7 +28,7 @@ let rec findAll (i : int) (n : int) (k : string) (s : string list) : string list
     match i with
         | 0 -> s;
         | j ->  let (n', t) = find n k;
-                findAll (j-1) (n'+1) k [t]@s;
+                findAll (j-1) (n'+1) k (t::s);
 
 let rec findOrdered (i : int) (n : int) (k : string) (s : (int * string) list) : (int * string) list =
     match List.length s with
@@ -40,7 +40,7 @@ let rec findOrdered (i : int) (n : int) (k : string) (s : (int * string) list) :
                     | true ->   if p < i then
                                     match List.tryFindIndex (fun x -> fst x = p) s with 
                                         | Some j -> findOrdered i (n'+1) k s;
-                                        | None -> findOrdered i (n'+1) k ([(p, t.Substring(6, 1))]@s);
+                                        | None -> findOrdered i (n'+1) k ((p, t.Substring(6, 1))::s);
                                 else
                                     findOrdered i (n'+1) k s;
 

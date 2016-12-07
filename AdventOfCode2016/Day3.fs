@@ -16,8 +16,8 @@ let rec zip3 (t : int list) (ts : (int * int * int) list) (i : int list) : (int 
         | [] -> match i with
                 | [] -> ts
                 | is -> zip3 [(List.head is)] ts (List.tail is);
-        | [x] -> zip3 ([x] @ [List.head i]) ts (List.tail i);
-        | x::xs -> zip3 [] ([(x, List.head xs, List.head i)] @ ts) (List.tail i);
+        | [x] -> zip3 (x :: [List.head i]) ts (List.tail i);
+        | x::xs -> zip3 [] ((x, List.head xs, List.head i) :: ts) (List.tail i);
 
 let rezip (t : (int * int * int) list) : (int * int * int) list =
     let (p, q, r) = Seq.fold (fun (a, b, c) (x, y, z)-> (a @ [x], b @ [y], c @ [z])) ([], [], []) t;

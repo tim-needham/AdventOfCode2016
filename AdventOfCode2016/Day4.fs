@@ -30,9 +30,9 @@ let rec merge (c : char) (t : (char * int) list) : (char * int) list =
     match t with
         | [] -> [(c, 1)];
         | (x, n)::xs -> if c = x then
-                            [(x, n + 1)] @ xs;
+                            (x, n + 1) :: xs;
                         else
-                            [(x, n)] @ merge c xs;
+                            (x, n) :: merge c xs;
 
 let rec accrete (t : (char * int) list) (c : char list) : (char * int) list =
     match c with

@@ -27,7 +27,7 @@ let rec traverse (p : int * int) (s : char list) (m : char -> (int * int) -> (in
         | x::xs ->  traverse (m x p) xs m;
 
 let find (p : (int * int) list) (s : string) (m : char -> (int * int) -> (int * int)) : (int * int) list =
-    [traverse (Seq.head p) (Seq.toList s) m] @ p ;
+    (traverse (Seq.head p) (Seq.toList s) m) :: p ;
 
 let decode (p : (int * int)) (k : char list list) : char =
     let (x, y) = p;
@@ -40,14 +40,14 @@ let run (file : string) =
 
     moves
     |> Seq.fold (fun a c -> find a c move) [(1, 1)]
-    |> Seq.fold (fun a c -> [(decode c square)] @ a) []
+    |> Seq.fold (fun a c -> (decode c square) :: a) []
     |> Seq.skip 1
     |> Seq.fold (fun a c -> a + string c) ""
     |> printfn "Day 2, part 1: %A";
 
     moves
     |> Seq.fold (fun a c -> find a c moveD) [(0, 2)]
-    |> Seq.fold (fun a c -> [(decode c diamond)] @ a) []
+    |> Seq.fold (fun a c -> (decode c diamond) :: a) []
     |> Seq.skip 1
     |> Seq.fold (fun a c -> a + string c) ""
     |> printfn "Day 2, part 2: %A";

@@ -7,12 +7,12 @@ let rec parse (b : bool) (c : char list) (s : string) (o : string list) (i : str
         | [] -> match s with
                 | "" -> (o |> List.rev, i |> List.rev);
                 | _ ->  match b with
-                        | true -> (o |> List.rev, [s]@i |> List.rev);
-                        | false -> ([s]@o |> List.rev, i |> List.rev);
+                        | true -> (o |> List.rev, s::i |> List.rev);
+                        | false -> (s :: o |> List.rev, i |> List.rev);
         | x::xs ->  match x with
                     | '[' | ']' ->  match b with
-                                    | true -> parse false xs "" o ([s]@i);
-                                    | false -> parse true xs "" ([s]@o) i;
+                                    | true -> parse false xs "" o (s::i);
+                                    | false -> parse true xs "" (s::o) i;
                     | _ -> parse b xs (s + string x) o i;
 
 let rec abba (c : char list) (b : bool) (f : char) (s : char) : bool =
@@ -48,7 +48,7 @@ let rec aba (c : char list) (f : char) (s : char) (m : (char * char) list) : (ch
                         aba xs s x m;
                     else
                         if f = x then
-                            aba xs s x ([(f, s)] @ m);
+                            aba xs s x ((f, s) :: m);
                         else
                             aba xs s x m;
 
