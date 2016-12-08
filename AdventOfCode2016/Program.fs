@@ -7,7 +7,11 @@ let main argv =
 
     let mutable cont = true;
 
-    let problems = [| Day1.run; Day2.run; Day3.run; Day4.run; Day5.run; Day6.run; Day7.run |];
+    let problems = 
+        [| 
+            Day1.run; Day2.run; Day3.run; Day4.run; Day5.run; Day6.run; Day7.run;
+            Day8.run
+        |];
 
     while cont do
         printfn "Enter a day number (1-25) to run that day's challenge.";

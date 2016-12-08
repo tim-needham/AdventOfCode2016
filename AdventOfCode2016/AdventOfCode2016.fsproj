@@ -61,6 +61,7 @@
     <Compile Include="Day5.fs" />
     <Compile Include="Day6.fs" />
     <Compile Include="Day7.fs" />
+    <Compile Include="Day8.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="day1.txt">
@@ -81,7 +82,10 @@
     <Content Include="day6.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Day7.txt">
+    <Content Include="day7.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="day8.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
