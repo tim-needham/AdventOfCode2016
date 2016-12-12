@@ -40,11 +40,10 @@ let rec size (c : Chunk list) : Int64 =
 let run (file : string) =
     let input = (Seq.toList (File.ReadLines(file))).[0];
 
-
     build [] "" make input                 
     |> size
     |> printfn "Day 9, part 1: %d";
 
     build [] "" makeTree input                
     |> size
-    |> printfn "Day , part 2: %d";
+    |> printfn "Day 9, part 2: %d";
