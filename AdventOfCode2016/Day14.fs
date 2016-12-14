@@ -45,7 +45,11 @@ let generate (s : string) (i : int) (n : int) : string =
 
 let rec find (c : Candidate list) (o : Key list) (s : string) (i : int) (n : int) (z : int) : Key list =
     match o.Length with
-        | y when y = n -> o;
+        | y when y >= n ->  o
+                            |> Seq.sortBy (fun x -> x.Index)
+                            |> Seq.take n
+                            |> Seq.toList
+                            |> List.rev;
         | _ ->  let cs = c
                         |> Seq.filter (fun x -> i - x.Value.Index <= 1000)
                         |> Seq.toList;
@@ -74,13 +78,11 @@ let run (file : string) =
     let salt = (Seq.toList (File.ReadLines(file))).[0];
 
     find [] [] salt 0 64 0
-    |> List.sortBy (fun x -> 0 - x.Index)
     |> List.map (fun x -> x.Index)
     |> List.head
     |> printfn "Day 14, part 1: %d";
 
     find [] [] salt 0 64 2016
-    |> List.sortBy (fun x -> 0 - x.Index)
     |> List.map (fun x -> x.Index)
     |> List.head
     |> printfn "Day 14, part 2: %d";
