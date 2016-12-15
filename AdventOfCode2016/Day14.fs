@@ -8,12 +8,12 @@ open System.Text;
 
 [<StructuredFormatDisplay("{AsString}")>]
 type Key = { Index : int; Hash : string }
-            override m.ToString() = String.Format("Index {0} Hash {1}", m.Index, m.Hash)
+            override m.ToString() = sprintf "Index %d Hash %s" m.Index m.Hash
             member m.AsString = m.ToString();;
 
 [<StructuredFormatDisplay("{AsString}")>]
 type Candidate = { Token : char; Value : Key }
-                    override m.ToString() = String.Format("Token {0} {1}", m.Token, m.Value)
+                    override m.ToString() = sprintf "Token %c %A" m.Token m.Value
                     member m.AsString = m.ToString();;
 
 let md5 (s : string) : string =
