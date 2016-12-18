@@ -1,6 +1,7 @@
 ﻿module Day11
 
 open System;
+open System.Collections.Generic;
 open System.IO;
 
 type Component =
@@ -114,16 +115,22 @@ let moves (l : Lab) : Lab list =
         | 3 -> cs
                 |> List.map (fun (x, y) -> { Lift = 2; Floors = [l1; l2; l3@x; y] });
 
-let validMoves (tr : Lab list * Generic array) (l : Lab) : (Lab list * Generic array) =
+let validMoves (tr : Lab list * Dictionary<Generic, bool>) (l : Lab) : (Lab list * Dictionary<Generic, bool>) =
     let (ms, ss) = tr;
 
     let ns = moves l
             |> List.filter (validLab)
-            |> List.filter (fun x -> Array.tryFindIndex(fun y -> y = genericise x) ss = None);
+            |> List.map (fun x -> (x, genericise x))
+            |> List.filter (snd >> ss.ContainsKey >> not)
+            |> List.distinctBy (fun (x, y) -> y)
     
-    (ns@ms, Array.concat [ns |> List.toArray |> Array.map(genericise); ss]);
+    for (x, y) in ns do
+        ss.Add(y, true);
 
-let rec bfs (m : int) (ls : Lab list) (ss : Generic array) : int =
+    ((ns |> List.map (fst))@ms, ss);
+
+let rec bfs (m : int) (ls : Lab list) (ss : Dictionary<Generic, bool>) : int =
+
     let (ns, ts) = ls |> List.fold (validMoves) ([], ss);
     
     let os = ns |> List.filter (success);
@@ -149,10 +156,14 @@ let run (file : string) =
             Floors = [for f in 0..3 -> lab.Floors.[f] @ if f = 0 then part2 else []]
         };
 
-    bfs 0 [lab] [||]
+    let seen = new Dictionary<Generic, bool>();
+
+    bfs 0 [lab] seen
     |> printfn "Day 11, part 1: %A";
 
-    bfs 0 [lab2] [||]
+    let seen2 = new Dictionary<Generic, bool>();
+
+    bfs 0 [lab2] seen2
     |> printfn "Day 11, part 2: %d";
 
 
