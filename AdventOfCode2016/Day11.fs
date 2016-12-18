@@ -15,6 +15,12 @@ type Lab =
         Floors : Floor list
     };;
 
+type LabHash =
+    {
+        L : int;
+        Fs : (int * int) list
+    };;
+
 let isChip (c : Component) : bool =
     match c with
         | Chip _ -> true;
@@ -24,6 +30,14 @@ let isGen (c : Component) : bool =
     match c with
         | Gen _ -> true;
         | Chip _ -> false;
+
+let findHash (l : Lab) : LabHash =
+    {
+        L = l.Lift;
+        Fs = l.Floors
+            |> List.map(List.partition (isChip))
+            |> List.map (fun (x, y) -> (x |> List.length, y |> List.length))
+    };
 
 let rec parseStuff (s : string list) : Component list =
     match s with
@@ -90,7 +104,7 @@ let newLab (l : Lab) (cs : Component list) (d : int) : Lab =
         ]
     }
 
-let moves (ts : Lab list) (ss : Lab list): Lab list list=
+let moves (ts : Lab list) (ss : LabHash list): Lab list list=
     let h, t = ts |> List.head, ts |> List.tail;
     let ms = pick h.Floors.[h.Lift];
 
@@ -110,8 +124,9 @@ let moves (ts : Lab list) (ss : Lab list): Lab list list=
             |> List.filter (validLab)
             |> Set.ofList;
 
-    (ms - Set.ofList (t)) - Set.ofList(ss)
+    (ms - Set.ofList (t))
     |> Set.toList
+    |> List.filter (fun x -> List.tryFindIndex (fun y -> y = findHash x) ss = None)
     |> List.map (fun x -> x::ts);
 
 let cost (l : Lab) : int =
@@ -121,7 +136,7 @@ let cost (l : Lab) : int =
     |> List.map (fun (x, y) -> x * (y |> List.length))
     |> List.sum;
 
-let rec search (ss : Lab list) (q : Lab list list) : Lab list =
+let rec search (ss : LabHash list) (q : Lab list list) : Lab list =
     match q with
         | [] -> [];
         | x::xs ->  let h = x |> List.head;
@@ -131,7 +146,7 @@ let rec search (ss : Lab list) (q : Lab list list) : Lab list =
                         let ms = moves x ss;
                         let ns = (xs@ms)
                                 |> List.sortBy (List.head >> cost);
-                        search (h::ss) ns;
+                        search (findHash h::ss) ns;
 
 let run (file : string) =
     let input = Seq.toList (File.ReadLines(file));
