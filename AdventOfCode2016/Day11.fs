@@ -3,121 +3,167 @@
 open System;
 open System.IO;
 
-type Component = 
-    | Chip of l : string
-    | Generator of l : string;;
-       
-type Floor = { Id : int; Components : Component list };;
+type Component =
+    | Chip of s : string
+    | Gen of s : string;;
 
-type Lab = { Lift : int; Floors : Floor list };;
+type Floor = Component list;;
 
-let floors = [""; "first"; "second"; "third"; "fourth";]
+type Lab = 
+    {
+        Lift : int;
+        Floors : Floor list
+    };;
 
-let parse (s : string) : Floor =
-    match s.Split([|' '; ','; '.'|], StringSplitOptions.RemoveEmptyEntries) |> Array.toList with
-        | "The" :: n :: "floor" :: "contains" :: "nothing" :: ["relevant"] ->   let x = List.findIndex (fun a -> a = n) floors;
-                                                                                { Id = x; Components = [] };
-        | "The" :: n :: "floor" :: "contains" :: xs ->  let x = List.findIndex (fun a -> a = n) floors;
-                                                        let comps = xs 
-                                                                    |> Seq.where (fun a -> a <> "a" && a <> "generator" && a <> "microchip" && a <> "and")
-                                                                    |> Seq.map (fun a -> a.Split('-') |> Array.toList)
-                                                                    |> Seq.map (fun a -> a |> List.head |> if a.Length > 1 then Chip else Generator)
-                                                                    |> Seq.toList;
-                                                        { Id = x; Components = comps};
-                                                           
-let success (l : Lab) : bool =
-    match l.Floors.[0].Components, l.Floors.[1].Components, l.Floors.[2].Components with
-        | [], [], [] -> true;
-        | _ -> false;                                                        
-
-let rec remove (n : Component) (i : Component list) : Component list =
-    match i with
-        | [] -> [];
-        | x::xs when x = n -> xs;
-        | y::xs -> y :: (remove n xs);
-        
-let rec single (o : Component list) (i : Component list) : (Component list * Component list) list =
-    match i with
-        | [] -> [];
-        | x::xs -> ([x], o @ xs) :: single (o @ [x]) xs;
-               
-let rec double (o : Component list) (i : Component list) : seq<Component list * Component list> =
-    seq {
-        match i with 
-            | [] -> ignore [];
-            | x::xs ->  for y in xs do yield (x :: [y], o @ (remove y xs));
-                        yield! double (o @ [x]) xs;
-    };
-
-let valid (c : Component list) : bool =
+let isChip (c : Component) : bool =
     match c with
-        | [] -> true;
-        | x::xs ->  let gs = c 
-                            |> Seq.choose (fun a -> match a with
-                                                    | Generator c -> Some (Generator c);
-                                                    | _ -> None)
-                            |> Seq.toList;
+        | Chip _ -> true;
+        | Gen _ -> false;
 
-                    if gs = [] then
-                        true;
-                    else
-                        let cs = c 
-                                |> Seq.choose (fun a -> match a with
-                                                        | Chip c -> Some (Generator c);
-                                                        | _ -> None)
-                                |> Seq.toList;
+let isGen (c : Component) : bool =
+    match c with
+        | Gen _ -> true;
+        | Chip _ -> false;
 
-                        let ds = Seq.fold (fun a b -> remove b a) cs gs;
-                        ds = [];
-        
-let cargo (i : Component list) : (Component list * Component list) list =
-    match i with
+let rec parseStuff (s : string list) : Component list =
+    match s with
         | [] -> [];
-        | [x] -> single [] i;
-        | x::xs ->  single [] i 
-                    @ (double [] i |> Seq.toList)
-                    |> Seq.filter (fun (a, b) -> valid b)
-                    |> Seq.toList;
+        | "a"::xs -> parseStuff xs;
+        | "and"::xs -> parseStuff xs;
+        | "nothing"::xs -> [];
+        | x::"generator"::xs -> Gen x :: parseStuff xs;
+        | x::"microchip"::xs -> Chip (x.Split('-').[0]) :: parseStuff xs;
 
-let moves (n : int) (l : Lab) : (int * Lab) list = 
-    let f = l.Floors.[l.Lift - 1];
-    let c = cargo f.Components;
-    let o = if l.Lift < 4 then [(l.Lift + 1, l.Floors.[l.Lift].Components)] else [] 
-            @ if l.Lift > 1 && l.Floors.[l.Lift - 1].Components <> [] then [(l.Lift - 1, l.Floors.[l.Lift - 2].Components)] else [];
-    [for (a, b) in o do for (d, e) in c do yield (a, b, d, e)]
-    |> Seq.where (fun (a, b, d, e) -> valid (b@d))
-    |> Seq.map (fun (a, b, d, e) -> { Lift = a; Floors = [for i in 1..4 -> if i = l.Lift then { Id = i; Components = e } else if i = a then { Id = i; Components = (b@d) } else l.Floors.[i-1]]})
-    |> Seq.map (fun m -> (n, m))
-    |> Seq.toList;
+let parseFloor (s : string) : Floor =
+    match s.Split([|' '; ','; '.'|], StringSplitOptions.RemoveEmptyEntries) |> Array.toList with
+        | "The"::n::"floor"::"contains"::xs -> parseStuff xs |> List.sort; 
 
-let rec bfs (e : Lab list) (l : (int * Lab) list) : int =
-    match l with
-        | [] -> 0;
-        | (n, x)::xs ->  if success x then
-                            n;
-                         else
-                            let es = x::e;
-                            let ms = moves (n+1) x;
-                            let os = ms
-                                    |> Seq.filter (fun (i, a) -> es |> List.tryFindIndex (fun b -> b = a) = None)
-                                    |> Seq.toList; 
-                            
-                            bfs es (xs @ os);  
+let success (l : Lab) : bool =
+    l.Floors
+    |> List.take 3
+    |> List.forall (List.isEmpty);
+
+let rec validFloor (f : Floor) : bool =
+    match f with
+        | [] -> true;
+        | Gen x::xs -> true;
+        | Chip x::xs -> (xs |> List.isEmpty
+                        ||
+                        xs |> List.forall (isChip)
+                        ||
+                        xs |> List.tryFindIndex (fun y -> y = Gen x) <> None)
+                        &&
+                        validFloor xs;                        
+
+let validLab (l : Lab) : bool =
+    l.Floors
+    |> List.forall (validFloor);
+
+let pick (f : Floor) : Component list list =
+    let d = if f |> List.length < 2 then
+                [];
+            else
+                [for x in f do for y in f -> (x, y)]
+                |> List.filter (fun (x, y) -> x <> y)
+                |> List.map (fun (x, y) -> [x; y] |> List.sort)
+                |> List.distinct;
+
+    let s = if f |> List.isEmpty then
+                [];
+            else
+                [for x in f -> [x]];
+    d@s;
+
+let newLab (l : Lab) (cs : Component list) (d : int) : Lab =
+    {
+        Lift = l.Lift + d;
+        Floors =    [
+            for f in 0..3 ->
+                if f = l.Lift+d then
+                    l.Floors.[f] @ cs |> List.sort;
+                else if f = l.Lift then
+                    (Set.ofList l.Floors.[f]) - (Set.ofList cs)
+                    |> Set.toList
+                    |> List.sort;
+                else
+                    l.Floors.[f];
+        ]
+    }
+
+let moves (ts : Lab list) (ss : Lab list): Lab list list=
+    let h, t = ts |> List.head, ts |> List.tail;
+    let ms = pick h.Floors.[h.Lift];
+
+    let ds =    if h.Lift > 0  && not (h.Floors.[h.Lift - 1] |> List.isEmpty) then
+                    ms
+                    |> List.map (fun x -> newLab h x -1);
+                else
+                    [];
+
+    let us =    if h.Lift < 3 then
+                    ms
+                    |> List.map (fun x -> newLab h x 1);
+                else
+                    [];
+
+    let ms = (us @ ds)    
+            |> List.filter (validLab)
+            |> Set.ofList;
+
+    (ms - Set.ofList (t)) - Set.ofList(ss)
+    |> Set.toList
+    |> List.map (fun x -> x::ts);
+
+let cost (l : Lab) : int =
+    l.Floors
+    |> List.rev
+    |> List.zip [0..3]
+    |> List.map (fun (x, y) -> x * (y |> List.length))
+    |> List.sum;
+
+let rec search (ss : Lab list) (q : Lab list list) : Lab list =
+    match q with
+        | [] -> [];
+        | x::xs ->  let h = x |> List.head;
+                    if success h then
+                        x;
+                    else
+                        let ms = moves x ss;
+                        let ns = (xs@ms)
+                                |> List.sortBy (List.head >> cost);
+                        search (h::ss) ns;
 
 let run (file : string) =
     let input = Seq.toList (File.ReadLines(file));
 
-    let floors = Seq.map (fun x -> parse x) input
+    let floors = Seq.map (parseFloor) input
                 |> Seq.toList;
 
-    let lab =  { Lift = 1; Floors = floors };
+    let lab =  { Lift = 0; Floors = floors };
 
-    let v = bfs [] [(1, lab)];
-
-    0
+    search [] [[lab]]
+    |> List.tail
+    |> List.length
     |> printfn "Day 11, part 1: %d";
 
-    0
+    let part2 = [Chip "dilithium"; Chip "elerium"; Gen "dilithium"; Gen "elerium"];
+
+    let lab2 = 
+        {
+            Lift = 0;
+            Floors = 
+                [
+                    for f in 0..3 ->
+                        if f = 0 then
+                            (floors.[f] @ part2) |> List.sort;
+                        else
+                            floors.[f]
+                ];
+        };
+
+    search [] [[lab2]]
+    |> List.tail
+    |> List.length
     |> printfn "Day 11, part 2: %d";
 
 
