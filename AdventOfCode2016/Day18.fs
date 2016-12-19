@@ -12,15 +12,10 @@ let trap (x : char) (y : char) (z : char) : char =
         | _, _, _ -> '.';
 
 let generate (s : string) : string =
-    let x = ("."+s).Substring(0, s.Length).ToCharArray()
-            |> Array.toList;
-    let y = s.ToCharArray()
-            |> Array.toList;
-    let z = (s+".").Substring(1).ToCharArray()
-            |> Array.toList;
-
-    List.zip3 x y z
-    |> List.map (fun (x, y, z) -> trap x y z)
+    ("."+s+".").ToCharArray()
+    |> Array.toList
+    |> Seq.windowed 3
+    |> Seq.map (Array.toList >> (fun (x::y::z::_) -> trap x y z))
     |> String.Concat;
 
 let rec safe (s : string) : int =
