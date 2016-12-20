@@ -3,30 +3,22 @@
 open System;
 open System.IO
 
-let rec maxpow (e : int) (p : int) (n : int) : int =
-    match (float p)**(float e) with
-        | m when m > (float n) -> e - 1;
-        | _ -> maxpow (e+1) p n;
-    
-
 let josephus (n : int) : int =
-    let a = maxpow 0 2 n;
-    let l = n - int (2.0 ** float a);
+    let a = Math.Floor (Math.Log10 (float n) / Math.Log10 (2.0));
+    let l = n - int (2.0 ** a);
     (2 * l) + 1;
     
 // sisyphus because why not?
 let sisyphus (n : int) : int =
-    let a = maxpow 0 3 n;
-    let l = n - int (3.0 ** float a);
-    let m = int (3.0 ** float a);
+    let a = Math.Floor (Math.Log10 (float n) / Math.Log10 (3.0));
+    let c = int (3.0 ** a);
+    let l = n - c;
+    let b = int (Math.Floor (float l / float c));
 
-    // when my brain starts working, I'll refactor out the if/then/else into a nice formula.
     if l = 0 then
         n;
-    else if (l < m) then
-        l;
     else
-        m + (2 * (l - m));
+        ((b + 1) * l) - (b * c);
 
 let run (file : string) =
     let input = (Seq.toList (File.ReadLines(file))).[0] |> Int32.Parse;
