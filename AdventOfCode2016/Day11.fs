@@ -165,5 +165,3 @@ let run (file : string) =
 
     bfs 0 [lab2] seen2
     |> printfn "Day 11, part 2: %d";
-
-
