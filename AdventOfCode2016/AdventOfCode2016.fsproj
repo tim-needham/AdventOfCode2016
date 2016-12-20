@@ -75,6 +75,11 @@
     <Compile Include="Day18.fs" />
     <Compile Include="Day19.fs" />
     <Compile Include="Day20.fs" />
+    <Compile Include="Day21.fs" />
+    <Compile Include="Day22.fs" />
+    <Compile Include="Day23.fs" />
+    <Compile Include="Day24.fs" />
+    <Compile Include="Day25.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="day1.txt">
@@ -135,6 +140,21 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="day20.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="day21.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="day22.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="day23.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="day24.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="day25.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
