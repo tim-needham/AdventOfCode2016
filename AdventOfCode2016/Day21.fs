@@ -138,6 +138,15 @@ let run (file : string) =
     |> String.Concat
     |> printfn "Day 21, part 1: %s";
 
+    // It would be nice to think that we could just reverse the instruction list
+    // and apply the inverse of each operation but RotateP is surjective meaning
+    // that its inverse is not well-defined. In other words we'd end up with a 
+    // tree full of potentially valid solutions and that point it's easier to 
+    // note that there are no instructions that alter the input length and
+    // some instructions rely on there only being one copy of each character
+    // so it's easier to just permute the input sequence and brute force a 
+    // solution.
+
     let scrambled = "fbgdceah";
 
     "abcdefgh"
