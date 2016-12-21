@@ -64,6 +64,14 @@ let rotateP (x : char) (cs : char list) : char list =
         | n when n >= 4 -> rotate R (y + 2) cs;
         | _ -> rotate R (y + 1) cs;
 
+let unrotateP (x : char) (cs : char list) : char list =
+    let y = cs |> List.findIndex (fun a -> a = x);
+
+    match y with
+        | n when n % 2 = 1 -> rotate L ((y+1) / 2) cs;
+        | 0 -> rotate L 1 cs; // y = 0 is actually y = 8 mod 8, then it fits the below.
+        | _ -> rotate L ((y/2) + 5) cs;
+
 // x < y
 let reverse (x : int) (y : int) (cs : char list) : char list =
     let is = match x with
@@ -102,30 +110,16 @@ let apply (i : Instruction) (cs : char list) : char list =
         | Reverse (x, y) -> reverse x y cs;
         | Move (x, y) -> move x y cs;
 
-let rec unscramble (is : Instruction list) (s : string) (ps : string list) : string =
-    match ps with
-        | [] -> "";
-        | x::xs ->  let y = x |> Seq.toList;
-                    let scrambled = is
-                                    |> Seq.toList
-                                    |> List.fold (fun a c -> apply c a) y
-                                    |> String.Concat;
-
-                    if scrambled = s then
-                        x;
-                    else
-                        unscramble is s xs;
-
-let rec distribute (e : 'a) (es : 'a list) : 'a list list =
-    match es with
-        | [] -> [[e]];
-        | x::xs' as xs -> (e::xs)::[for xs in distribute e xs' -> x::xs];
-
-let rec permute (cs : 'a list) : 'a list list =
-    match cs with
-        | [] -> [[]];
-        | e::xs -> List.collect (distribute e) (permute xs);
-
+let unapply (i : Instruction) (cs : char list) : char list =
+    match i with
+        | SwapP (x, y) -> swapP x y cs;
+        | SwapL (x, y) -> swapL x y cs;
+        | Rotate (L, x) -> rotate R x cs;
+        | Rotate (R, x) -> rotate L x cs;
+        | RotateP x -> unrotateP x cs;
+        | Reverse (x, y) -> reverse x y cs;
+        | Move (x, y) -> move y x cs;
+    
 let run (file : string) =
     let input = Seq.toList (File.ReadLines(file))
                 |> List.map (parse);
@@ -134,24 +128,15 @@ let run (file : string) =
                     |> Seq.toList;
 
     input
-    |> List.fold (fun a c -> apply c a) password;
+    |> List.fold (fun a c -> apply c a) password
     |> String.Concat
     |> printfn "Day 21, part 1: %s";
 
-    // It would be nice to think that we could just reverse the instruction list
-    // and apply the inverse of each operation but RotateP is surjective meaning
-    // that its inverse is not well-defined. In other words we'd end up with a 
-    // tree full of potentially valid solutions and that point it's easier to 
-    // note that there are no instructions that alter the input length and
-    // some instructions rely on there only being one copy of each character
-    // so it's easier to just permute the input sequence and brute force a 
-    // solution.
+    let scrambled = "fbgdceah"
+                    |> Seq.toList;
 
-    let scrambled = "fbgdceah";
-
-    "abcdefgh"
-    |> Seq.toList
-    |> permute
-    |> List.map (String.Concat)
-    |> unscramble input scrambled
+    input
+    |> List.rev
+    |> List.fold (fun a c -> unapply c a) scrambled
+    |> String.Concat
     |> printfn "Day 21, part 2: %s";
