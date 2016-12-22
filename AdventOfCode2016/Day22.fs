@@ -92,6 +92,16 @@ let rec bfs (m : int) (b : int * int) (ns : Node list) (t : int * int) (ps : (in
     else
         m+1;
 
+let pp (w : int) (n : Node) : char =
+    if n.Used = 0 then
+        '_';
+    else if n.X = w && n.Y = 0 then
+        'G';
+    else if n.Size > 100 then
+        '#';
+    else
+        '.';
+
 let run (file : string) =
     let input = Seq.toList (File.ReadLines(file))
                 |> List.skip 2
@@ -122,3 +132,11 @@ let run (file : string) =
     // "_G........" and so we need one more move.
     m1 + ((width - 1) * 5) + 1
     |> printfn "Day 22, part 2: %d";
+
+    for y in 0..height do
+        for x in 0..width do
+            input
+            |> find x y
+            |> pp width
+            |> printf "%c";
+        printfn "";
