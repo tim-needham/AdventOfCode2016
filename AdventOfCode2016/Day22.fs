@@ -40,6 +40,58 @@ let validPairs (ns : Node list) : int =
     |> List.filter (fun (x, y) -> x.Used <= y.Avail)
     |> List.length;
 
+let moves (p : int * int) (b : int * int) : (int * int) list =
+    let px, py = p;
+    let bx, by = b;
+
+    seq {
+        if px > 0 then
+            yield (px - 1, py);
+        if px < bx then
+            yield (px + 1, py);
+        if py > 0 then 
+            yield (px, py - 1);
+        if py < by then
+            yield (px, py + 1);    
+    }
+    |> Seq.toList;
+
+let find (x : int) (y : int) (ns : Node list) : Node =
+    ns
+    |> List.filter (fun a -> a.X = x && a.Y = y)
+    |> List.head;
+
+// Some nodes are significantly larger than others, these nodes effectively produce
+// a wall that blocks passage. All other adjacent nodes are convienently arranged
+// such that moving the data from one to another will be valid if the receiving
+// node is empty.
+let valid (p : int * int) (ns : Node list) : bool =
+    let x, y = p;
+
+    let n = ns |> find x y;
+
+    n.Size < 100;
+
+let validMoves (b : int * int) (ns : Node list) (tr : (int * int) list * (int * int) list) (p : int * int) : ((int * int) list * (int * int) list) =
+    let (ms, ss) = tr;
+
+    let ns = moves p b
+            |> List.filter (fun x -> valid x ns)
+            |> List.filter (fun x -> ss |> List.tryFindIndex (fun y -> y = x) = None)
+            |> List.distinct;
+    
+    (ns@ms, ns@ss);
+
+let rec bfs (m : int) (b : int * int) (ns : Node list) (t : int * int) (ps : (int * int) list) (ss : (int * int) list) : int = 
+    let (qs, ts) = ps |> List.fold (fun a c -> validMoves b ns a c) ([], ss);
+
+    let rs = qs |> List.filter (fun x -> x = t);
+
+    if rs |> List.isEmpty then
+        bfs (m+1) b ns t qs ts;
+    else
+        m+1;
+
 let run (file : string) =
     let input = Seq.toList (File.ReadLines(file))
                 |> List.skip 2
@@ -48,5 +100,25 @@ let run (file : string) =
     validPairs input
     |> printfn "Day 22, part 1: %d";
 
-    0
+    let width, height = input |> List.map (fun a -> (a.X, a.Y)) |> List.maxBy (fun (a, b) -> a, b);
+    let empty = input |> List.filter (fun a -> a.Used = 0) |> List.map (fun a -> (a.X, a.Y)) |> List.head;
+    let goal = (width, 0);
+    let target = (width - 1, 0);
+    let entry = (0, 0);
+
+    // First move the empty space to the left of the Goal.
+    let m1 = bfs 0 (width, height) input target [empty] [];
+
+    // Then move the Goal data to the Entry. We effectively do this by
+    // swapping the blank with the Goal and then repeatedly repositioning
+    // the empty space to the left of the Goal. Each time the empty space 
+    // must be moved to the left of the Goal takes 5 moves. 
+    //
+    // 0    1    2    3    4    5
+    // ._G  .G-  .G.  .G.  .G.  _G.
+    // ...  ...  .._  ._.  _..  ...
+    //
+    // This then leaves us with the first 10 nodes on the first row as 
+    // "_G........" and so we need one more move.
+    m1 + ((width - 1) * 5) + 1
     |> printfn "Day 22, part 2: %d";
