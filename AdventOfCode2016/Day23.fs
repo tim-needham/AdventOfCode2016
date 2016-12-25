@@ -87,21 +87,11 @@ let rec compute (p : int) (i : Instruction list) (m : Register list) : Register 
                                             compute (p + 1) i [for r in m -> if r.Id = z then { Id = z; Val = (a*b) } else r];
             | NoOp -> compute (p + 1) i m;
 
-let rec scan (i : int) (j : int) (ps : Instruction list) (rs : Instruction list) (is : Instruction list) : Instruction list =
-    // We ran out of things to look at :(
-    if i + (ps |> List.length) > (is |> List.length) then
-        is;
-    else
-        // Found it!
-        if j = (ps |> List.length) then
-            (is |> List.take i) @ rs @ (is |> List.skip (i + (ps |> List.length)));
-        else
-            // We're matching.
-            if is.[i+j] = ps.[j] then
-                scan i (j+1) ps rs is;
-            // We aren't.
-            else
-                scan (i+1) 0 ps rs is;
+let rec optimise (is : Instruction list) : Instruction list =
+    match is with
+        | [] -> [];
+        | Cpy (b, c1)::Inc a::Dec c2::Jnz (c3, Val -2)::Dec d1::Jnz (d2, Val -5)::xs when c1=c2 && c1=c3 && d1=d2 -> [ Mul (b, d1, a); Cpy (Val 0, c1); Cpy (Val 0, d1); NoOp; NoOp; NoOp] @ (optimise xs);
+        | x::xs -> x :: (optimise xs); 
 
 let run (file : string) =
     let instructions = Seq.toList (File.ReadLines(file))
@@ -131,9 +121,7 @@ let run (file : string) =
     //
     // and hope that tgl doesn't introduce any new loops.
 
-    let pattern = [ Cpy (Reg "b", Reg "c"); Inc (Reg "a"); Dec (Reg "c"); Jnz (Reg "c", Val -2); Dec (Reg "d"); Jnz (Reg "d", Val -5) ];
-    let replace = [ Mul (Reg "b", Reg "d", Reg "a"); Cpy (Val 0, Reg "c"); Cpy (Val 0, Reg "d"); NoOp; NoOp; NoOp ];
-    let matched = scan 0 0 pattern replace instructions;
+    let matched = optimise instructions;
 
     [ { Id = "a"; Val = 7 }; { Id = "b"; Val = 0 }; { Id = "c"; Val = 0 }; { Id = "d"; Val = 0 } ]
     |> compute 0 matched
