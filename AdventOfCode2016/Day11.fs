@@ -84,7 +84,7 @@ let doubles (cs : 'a list) : ('a list * 'a list) list =
     |> List.sort;
 
 let cargo (cs : Component list) : (Component list * Component list) list =
-    singles [] cs @ doubles cs
+    doubles cs @ (singles [] cs) 
     |> List.filter (fun (x, y) -> validFloor y);
 
 let newLab (c : Component list * Component list) (l : Lab) (d : int) : Lab =
@@ -106,12 +106,12 @@ let moves (l : Lab) : Lab list =
 
     match l.Lift with
         | 0 ->  cs |> List.map (fun (x, y) -> { Lift = 1; Floors = [y; l2@x; l3; l4] });
-        | 1 ->  (cs |> List.map (fun (x, y) -> { Lift = 0; Floors = [l1@x; y; l3; l4] }))
+        | 1 ->  (cs |> List.map (fun (x, y) -> { Lift = 2; Floors = [l1; y; l3@x; l4] }))
                 @
-                (cs |> List.map (fun (x, y) -> { Lift = 2; Floors = [l1; y; l3@x; l4] }));        
-        | 2 ->  (cs |> List.map (fun (x, y) -> { Lift = 1; Floors = [l1; l2@x; y; l4] }))
+                (cs |> List.map (fun (x, y) -> { Lift = 0; Floors = [l1@x; y; l3; l4] }));        
+        | 2 ->  (cs |> List.map (fun (x, y) -> { Lift = 3; Floors = [l1; l2; y; l4@x] }))
                 @
-                (cs |> List.map (fun (x, y) -> { Lift = 3; Floors = [l1; l2; y; l4@x] }));
+                (cs |> List.map (fun (x, y) -> { Lift = 1; Floors = [l1; l2@x; y; l4] }));
         | 3 -> cs
                 |> List.map (fun (x, y) -> { Lift = 2; Floors = [l1; l2; l3@x; y] });
 
